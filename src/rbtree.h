@@ -30,3 +30,12 @@ int rbtree_erase(rbtree *, node_t *);
 int rbtree_to_array(const rbtree *, key_t *, const size_t);
 
 #endif  // _RBTREE_H_
+
+
+#ifndef _COMMON_LIST_DEF_
+#define _COMMON_LIST_DEF_
+
+#define TRUE		1
+#define FALSE		0
+
+#endif
