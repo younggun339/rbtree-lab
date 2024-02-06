@@ -5,6 +5,62 @@
 #include <stdlib.h>
 
 
+int pow_2(int x) {
+  // 2**x 계산 함수
+  return 1 << x;
+}
+void record_keys(rbtree *t, node_t *p, node_t **node_arr, int *node_idx_list, int cur_depth, int render_depth) {
+  // visualize_tree에서 사용하기위한 배열을 재귀적으로 기록
+  if (cur_depth > render_depth) {
+    return;
+  }
+  node_arr[cur_depth * pow_2(render_depth) + node_idx_list[cur_depth]] = p;
+  node_idx_list[cur_depth] += 1;
+  if (p == t->nil) {
+    record_keys(t, t->nil, node_arr, node_idx_list, cur_depth +1, render_depth);
+    record_keys(t, t->nil, node_arr, node_idx_list, cur_depth +1, render_depth);
+  } else {
+    record_keys(t, p->left, node_arr, node_idx_list, cur_depth +1, render_depth);
+    record_keys(t, p->right, node_arr, node_idx_list, cur_depth +1, render_depth);
+  }
+}
+void visualize_tree(rbtree *t, int render_depth) {
+  // 트리 시각화 함수
+  // depth는 루트를 0으로 계산
+  // key_arr[i][j]: 깊이가 i인 (j+1)번째 원소의 키 **2차원 배열 접근이 불가능해 1차원 배열로 구현
+    node_t **node_arr = calloc( (render_depth +1) * pow_2(render_depth), sizeof(node_t));
+  // key_idx_list[i]: key_arr[i]의 현재 인덱스
+  int *node_idx_list = (int *) calloc(render_depth +1, sizeof(int));
+  char *filler = "  ";
+  // 키를 배열에 기록
+  record_keys(t, t->root, node_arr, node_idx_list, 0, render_depth);
+  // 기록된 키를 출력
+  for (int i = 0; i < render_depth +1; i++) {
+    for (int j = 0; j < pow_2(i); j++) {
+      for (int k = 0; k < pow_2(render_depth - i); k++) { // front buffer
+        printf("%s", filler);
+      }
+      if (node_arr[i * pow_2(render_depth) + j] == t->nil) {
+        printf("\x1b[0m" "%2s", ".");
+      } else if (node_arr[i * pow_2(render_depth) + j]->color == RBTREE_BLACK) {
+        // 검정 노드는 흰색으로 출력
+        printf("\x1b[0m" "%2d", node_arr[i * pow_2(render_depth) + j]->key);
+      } else {
+        // 빨강 노드는 빨간색으로 출력
+        printf("\x1b[31m" "%2d", node_arr[i * pow_2(render_depth) + j]->key);
+      }
+      for (int k = 0; k < pow_2(render_depth - i) -1; k++) { // back buffer
+        printf("%s", filler);
+      }
+    }
+    printf("\n");
+  }
+  printf("\n");
+  free(node_arr);
+  free(node_idx_list);
+}
+
+
 // #include "r"
 //  new_rbtree should return rbtree struct with null root node
 void test_init(void) {
@@ -59,6 +115,7 @@ void test_init(void) {
  void test_erase_root(rbtree *t, const key_t key) {
 //    rbtree *t = new_rbtree();
    node_t *p = rbtree_insert(t, key);
+   visualize_tree(t, 4);
    assert(p != NULL);
    assert(t->root == p);
    assert(p->key == key);
@@ -66,12 +123,13 @@ void test_init(void) {
    rbtree_erase(t, p);
    assert(t->root == t->nil);
 //  #ifdef SENTINEL
- assert(t->root == t->nil);
+   assert(t->root == t->nil);
+  //  visualize_tree(t,4);
 //  #else
 //    assert(t->root == NULL);
 //  #endif
 
-   delete_rbtree(t);
+  //  delete_rbtree(t);
  }
 
  static void insert_arr(rbtree *t, const key_t *arr, const size_t n) {
@@ -319,23 +377,30 @@ void test_init(void) {
     //  printf("%d", i);
      node_t *p = rbtree_insert(t, arr[i]);
      assert(p != NULL);
+     visualize_tree(t,4);
    }
 
    for (int i = 0; i < n; i++) {
      node_t *p = rbtree_find(t, arr[i]);
      printf("arr[%d] = %d\n", i, arr[i]);
+     printf("%d", 3);
+    //  visualize_tree(t,4);
      assert(p != NULL);
      assert(p->key == arr[i]);
     //  visualize_tree(t,4);
+     printf("%p", p);
      rbtree_erase(t, p);
+     visualize_tree(t,4);
+    //  printf("%p, %d, %p, %p\n", t->root,t->root->key, t->root->left, t->root->right);
+    //  printf("%d, %p\n",t->nil->key, t->nil);
     //  visualize_tree(t,4);
    }
 
-//    for (int i = 0; i < n; i++) {
-//      node_t *p = rbtree_find(t, arr[i]);
-//      visualize_tree(t,4);
-//      assert(p == NULL);
-//    }
+  //  for (int i = 0; i < n; i++) {
+  //    node_t *p = rbtree_find(t, arr[i]);
+  //    visualize_tree(t,4);
+  //    assert(p == NULL);
+  //  }
 
 //    for (int i = 0; i < n; i++) {
 //      node_t *p = rbtree_insert(t, arr[i]);
@@ -351,7 +416,7 @@ void test_init(void) {
  }
 
  void test_find_erase_fixed(rbtree *t) {
-   const key_t arr[] = {10, 5, 8, 34, 67, 23, 156, 24, 36,990, 25};
+   const key_t arr[] = {5,34, 67, 23, 156, 24, 36,990, 25};
    // {10, 5, 8, 34, 67, 23, 156, 24, 2, 12, 24, 36, 990, 25}
    const size_t n = sizeof(arr) / sizeof(arr[0]);
 //    rbtree *t = new_rbtree();
@@ -376,60 +441,6 @@ void test_init(void) {
  }
 
 
-int pow_2(int x) {
-  // 2**x 계산 함수
-  return 1 << x;
-}
-void record_keys(rbtree *t, node_t *p, node_t **node_arr, int *node_idx_list, int cur_depth, int render_depth) {
-  // visualize_tree에서 사용하기위한 배열을 재귀적으로 기록
-  if (cur_depth > render_depth) {
-    return;
-  }
-  node_arr[cur_depth * pow_2(render_depth) + node_idx_list[cur_depth]] = p;
-  node_idx_list[cur_depth] += 1;
-  if (p == t->nil) {
-    record_keys(t, t->nil, node_arr, node_idx_list, cur_depth +1, render_depth);
-    record_keys(t, t->nil, node_arr, node_idx_list, cur_depth +1, render_depth);
-  } else {
-    record_keys(t, p->left, node_arr, node_idx_list, cur_depth +1, render_depth);
-    record_keys(t, p->right, node_arr, node_idx_list, cur_depth +1, render_depth);
-  }
-}
-void visualize_tree(rbtree *t, int render_depth) {
-  // 트리 시각화 함수
-  // depth는 루트를 0으로 계산
-  // key_arr[i][j]: 깊이가 i인 (j+1)번째 원소의 키 **2차원 배열 접근이 불가능해 1차원 배열로 구현
-    node_t **node_arr = calloc( (render_depth +1) * pow_2(render_depth), sizeof(node_t));
-  // key_idx_list[i]: key_arr[i]의 현재 인덱스
-  int *node_idx_list = (int *) calloc(render_depth +1, sizeof(int));
-  char *filler = "  ";
-  // 키를 배열에 기록
-  record_keys(t, t->root, node_arr, node_idx_list, 0, render_depth);
-  // 기록된 키를 출력
-  for (int i = 0; i < render_depth +1; i++) {
-    for (int j = 0; j < pow_2(i); j++) {
-      for (int k = 0; k < pow_2(render_depth - i); k++) { // front buffer
-        printf("%s", filler);
-      }
-      if (node_arr[i * pow_2(render_depth) + j] == t->nil) {
-        printf("\x1b[0m" "%2s", ".");
-      } else if (node_arr[i * pow_2(render_depth) + j]->color == RBTREE_BLACK) {
-        // 검정 노드는 흰색으로 출력
-        printf("\x1b[0m" "%2d", node_arr[i * pow_2(render_depth) + j]->key);
-      } else {
-        // 빨강 노드는 빨간색으로 출력
-        printf("\x1b[31m" "%2d", node_arr[i * pow_2(render_depth) + j]->key);
-      }
-      for (int k = 0; k < pow_2(render_depth - i) -1; k++) { // back buffer
-        printf("%s", filler);
-      }
-    }
-    printf("\n");
-  }
-  printf("\n");
-  free(node_arr);
-  free(node_idx_list);
-}
 
 
 int main(void) {
@@ -440,9 +451,10 @@ int main(void) {
 //    printf("%d", 3);
 //    test_insert_single(t, 1024);
 //    visualize_tree(t,5);
-//    visualize_tree(t,4);
+   visualize_tree(t,4);
 //    test_find_single(t, 512, 1024);
-//    test_erase_root(t, 128);
+  //  test_erase_root(t, 128);
+   visualize_tree(t,4);
    test_find_erase_fixed(t);
   //  visualize_tree(t,4);
    printf("Passed all tests!\n");
