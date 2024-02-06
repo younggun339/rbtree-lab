@@ -284,7 +284,7 @@ void *rbtree_insert_fixup(rbtree *t, node_t *z) {
    z->right = t->nil;
    z->color = RBTREE_RED;
   rbtree_insert_fixup(t,z);
-    //TODO: implement insert
+
   return t->root;
  }
 

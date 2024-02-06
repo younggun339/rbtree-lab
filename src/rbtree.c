@@ -22,7 +22,6 @@ rbtree *new_rbtree(void) {
     // 그냥 별도로 True, False 0, 1로 헤더에서 설정해놔서 그렇다.
     return FALSE;
   }
-   //TODO: initialize struct if needed
 
 }
 
@@ -241,29 +240,32 @@ void *rbtree_insert_fixup(rbtree *t, node_t *z) {
    z->right = t->nil;
    z->color = RBTREE_RED;
   rbtree_insert_fixup(t,z);
-    //TODO: implement insert
+
   return t->root;
  }
 
 
 // rb트리에서 값을 찾는 함수. 
  node_t *rbtree_find(const rbtree *t, const key_t key) {
-
+//    printf("%d", 3);
   node_t *x = t->root;
-
+  node_t *y;
+//   printf("%d", 4);
   while (x != t->nil)
   {
     if(key < x->key){
+      y = x;
       x = x->left;
     }
     else if(key > x->key){
+      y = x;
       x = x->right;
     }
     else{
+    //   printf("%d", x->key);
       return x;
     } 
   }
-
   return NULL;
 
  }
@@ -349,20 +351,20 @@ void rb_transplant(rbtree *t, node_t *u, node_t *v){
       // 형제의 꺾인 자식이 RED
       else { 
         
-      if (w->right->color == RBTREE_BLACK){
-        w->left->color = RBTREE_BLACK;
-        w->color = RBTREE_RED;
-        right_rotate(t, w);
-        w = x->parent->right;
-      }
-      // 형제의 펴진 자식이 RED
-      else{
-        w->color = x->parent->color;
-        x->parent->color = RBTREE_BLACK;
-        w->right->color = RBTREE_BLACK;
-        left_rotate(t,x->parent);
-        x = t->root;
-      }
+        if (w->right->color == RBTREE_BLACK){
+            w->left->color = RBTREE_BLACK;
+            w->color = RBTREE_RED;
+            right_rotate(t, w);
+            w = x->parent->right;
+        }
+        // 형제의 펴진 자식이 RED
+        else{
+            w->color = x->parent->color;
+            x->parent->color = RBTREE_BLACK;
+            w->right->color = RBTREE_BLACK;
+            left_rotate(t,x->parent);
+            x = t->root;
+        }
       }
     }
 
@@ -384,20 +386,22 @@ void rb_transplant(rbtree *t, node_t *u, node_t *v){
         x = x->parent;
       }
       // 형제 꺾인 자식 RED
-      else{ if (w->left->color == RBTREE_BLACK){
-        w->right->color = RBTREE_BLACK;
-        w->color = RBTREE_RED;
-        left_rotate(t, w);
-        w = x->parent->left;
-      }
-      // 형제 펴진 자식 RED
-      else{
-        w->color = x->parent->color;
-        x->parent->color = RBTREE_BLACK;
-        w->left->color = RBTREE_BLACK;
-        right_rotate(t,x->parent);
-        x = t->root;
-      }
+      else{ 
+        
+        if (w->left->color == RBTREE_BLACK){
+            w->right->color = RBTREE_BLACK;
+            w->color = RBTREE_RED;
+            left_rotate(t, w);
+            w = x->parent->left;
+        }
+        // 형제 펴진 자식 RED
+        else{
+            w->color = x->parent->color;
+            x->parent->color = RBTREE_BLACK;
+            w->left->color = RBTREE_BLACK;
+            right_rotate(t,x->parent);
+            x = t->root;
+        }
       }
     }
 
@@ -425,19 +429,18 @@ void rb_transplant(rbtree *t, node_t *u, node_t *v){
 
   y = z;
   succesor = y->color;
-  printf("hello");
-  if(z->left == t->nil && z->right == t->nil){
-    printf("hello");
-    x = t->nil;
-    if(z == t->root){
-        t->root = t->nil;
-    }
-  }
-  else if(z->left == t->nil && z->right != t->nil){
+
+//   if(z->left == t->nil && z->right == t->nil){
+//     x = t->nil;
+//     if(z == t->root){
+//         t->root = t->nil;
+//     }
+//   }
+  if(z->left == t->nil){
     x = z->right;
     rb_transplant(t,z,z->right);
   }
-  else if (z->right == t->nil && z->left != t->nil)
+  else if (z->right == t->nil)
   {
     x = z->left;
     rb_transplant(t,z,z->left);
@@ -478,9 +481,26 @@ void rb_transplant(rbtree *t, node_t *u, node_t *v){
   return 0;
  }
 
+ void array_rbtree(const rbtree *t, key_t *arr, node_t *root, int *index_x){
+
+    if(root != t->nil){
+        array_rbtree(t, arr, root->left, index_x);
+
+        arr[*index_x] = root->key;
+        (*index_x)++;
+
+        array_rbtree(t, arr, root->right, index_x);
+    }
+
+ }
+
  int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) {
 
-
+ if(arr != NULL && t != NULL){
+    int index_x = 0;
+    array_rbtree(t, arr, t->root, &index_x);
+ }
+ 
  return 0;
  }
 
