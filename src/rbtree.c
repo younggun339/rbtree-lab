@@ -110,8 +110,8 @@ void inorder_tree_free(rbtree *t, node_t *x){
     if(x!=t->nil){
   
         inorder_tree_free(t, x->left);
-        free(x);
         inorder_tree_free(t,x->right);
+        free(x);
     }
   
 }
@@ -122,7 +122,6 @@ void delete_rbtree(rbtree *t) {
   node_t *y= t->root;
 
   inorder_tree_free(t, y);
-   //TODO: reclaim the tree nodes's memory
 
   free(t->nil);
   free(t);
@@ -247,10 +246,8 @@ void *rbtree_insert_fixup(rbtree *t, node_t *z) {
 
 // rb트리에서 값을 찾는 함수. 
  node_t *rbtree_find(const rbtree *t, const key_t key) {
-//    printf("%d", 3);
   node_t *x = t->root;
   node_t *y;
-//   printf("%d", 4);
   while (x != t->nil)
   {
     if(key < x->key){
@@ -262,7 +259,6 @@ void *rbtree_insert_fixup(rbtree *t, node_t *z) {
       x = x->right;
     }
     else{
-    //   printf("%d", x->key);
       return x;
     } 
   }
@@ -430,12 +426,6 @@ void rb_transplant(rbtree *t, node_t *u, node_t *v){
   y = z;
   succesor = y->color;
 
-//   if(z->left == t->nil && z->right == t->nil){
-//     x = t->nil;
-//     if(z == t->root){
-//         t->root = t->nil;
-//     }
-//   }
   if(z->left == t->nil){
     x = z->right;
     rb_transplant(t,z,z->right);
